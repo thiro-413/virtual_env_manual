@@ -1,5 +1,11 @@
 # 手順書
 
+## 目次
+- バージョン一覧
+- どういう流れで環境構築したか
+- 環境構築の所感
+- 参考サイト
+
 ## バージョン一覧
 
 | software     | OS      | PHP | Nginx | Mysql | Laravel |
@@ -7,13 +13,32 @@
 | **ver/type** | centOS7 | 7.3 | 1.21  | 5.7   | 6.0     |
 
 ## どういう流れで環境構築したか
+### 今回の流れ
+- LinuxのCentOSのバージョン7をダウンロード
+- vagrant用ディレクトリの作成
+- Vagrantfileの編集
+- Vagrant プラグインのインストール
+- Vagrantを使用してゲストOSの起動
+- ゲストOSへのログイン
+- パッケージをインストール
+- PHPのインストール
+- composerのインストール
+- laravel6.0のインストール
+- laravel6.0 認証機能の追加
+- NginXのインストール
+- Laravelを動かす(NginX)
+- データベースのインストール
+- データベースの作成
+- Laravelを動かす(データベース)
+
+
 ### LinuxのCentOSのバージョン7をダウンロード
 - 下記のコマンドを実行  
-  ```
+  ```sh
   vagrant box add centos/7
   ```
 - 実行後表示された選択肢の中から3のvirtualboxを選択しEnter  
-  ```
+  ```sh
     1 ) hyperv
     2 ) libvirt
     3 ) virtualbox
@@ -22,16 +47,26 @@
     Enter your choice: 3
     ```
 - 下記のように表示されたら完了
-  ```
+  ```sh
   Successfully added box 'centos/7' (v1902.01) for 'virtualbox'!
   ```
 
 ### vagrant用ディレクトリの作成
 - ディレクトリを作成する  
   (今回はvagrant_dirという名前でディレクトリを作成)
-- 作成したフォルダの中で下記のコマンドでbox名`(centos/7)`を指定し実行することでvagrantの設定ファイルを生成する
+- 作成したフォルダの中で下記のコマンドを実行することでvagrantの初期設定ファイルを生成する  
+  今回はCentOSのバージョン7用のvagrantの初期設定ファイルを生成するため、box名`(centos/7)`を指定する
+
+  ```sh
+  vagrant init centos/7
   ```
-  `vagrant init centos/7`
+
+  実行後問題なければ以下のような文言が表示されます
+  ```sh
+  A `Vagrantfile` has been placed in this directory. You are now
+  ready to `vagrant up` your first virtual environment! Please read
+  the comments in the Vagrantfile as well as documentation on
+  `vagrantup.com` for more information on using Vagrant.
   ```
 
 ### Vagrantfileの編集
@@ -58,34 +93,44 @@
 
 ### Vagrant プラグインのインストール
 - 下記のコマンドを実行し`vagrant-vbguest`というプラグインをインストールする
-  ```
+  ```sh
   vagrant plugin install vagrant-vbguest
   ```
   `vagrant-vbguest`は初めに追加したBoxの中にインストールされているGuest Additionsというもののバージョンを、VirtualBoxのバージョンに合わせて最新化してくれるプラグイン
+
 - 下記のコマンドを実行し`vagrant-vbguest`のインストールが完了しているかを確認
-  ```
+  ```sh
   vagrant plugin list
+  
+  # 結果
+  vagrant-vbguest (0.30.0, global)
   ```
+  上記の様な結果が返ってくれば成功
 
 ### Vagrantを使用してゲストOSの起動
 - 下記のコマンドを実行しゲストOSの起動
-  ```
+  ```sh
   vagrant up
   ```
 
-
 ### ゲストOSへのログイン
 - 下記のコマンドを実行しログインする
-  ```
+  ```sh
   vagrant ssh
+  ```
+  
+  コマンドを実行した後、以下のような表記になっていればゲストOSにログインしていることになる
+  ```sh
+  Welcome to your Vagrant-built virtual machine.
+  [vagrant@localhost ~]$
   ```
 
   またはコマンド`vagrant ssh-config`の実行結果の情報を基に下記のコマンドを実行してログイン
-  ```
+  ```sh
   ssh vagrant@127.0.0.1 -i /Users/xxxx/.vagrant/machines/default/virtualbox -p 2222
   ```
 
-  #### `vagrant ssh-config`の実行結果
+  `vagrant ssh-config`の実行結果
   ```
   Host default
   HostName 127.0.0.1
@@ -97,38 +142,48 @@
   LogLevel FATAL
   ```
   実行後下記のような表記になっていればログイン成功
-  ```
+  ```sh
+  Welcome to your Vagrant-built virtual machine.
   [vagrant@localhost ~]$
   ```
 
 ### パッケージをインストール
 - 下記のコマンドを実行し、gitなどの開発に必要なパッケージを一括でインストールする
-  ```
+  ```sh
   sudo yum -y groupinstall "development tools"
   ```
 
 ### PHPのインストール
 - 下記のコマンドを実行してPHPのバージョン7.3をインストールしPHPのバージョンを確認
-  ```
+  ```sh
   sudo yum -y install epel-release wget
   sudo wget http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
   sudo rpm -Uvh remi-release-7.rpm
   sudo yum -y install --enablerepo=remi-php73 php php-pdo php-mysqlnd php-mbstring php-xml php-fpm php-common php-devel php-mysql unzip
   php -v
+
+  # php -v 実行結果
+  PHP 7.3.29 (cli) (built: Jun 29 2021 09:30:31) ( NTS )
+  Copyright (c) 1997-2018 The PHP Group
+  Zend Engine v3.3.29, Copyright (c) 1998-2018 Zend Technologies
   ```
+  上記の様な結果が返ってくれば成功
+
 ### composerのインストール
 - 下記のコマンドでPHPのパッケージ管理ツールであるcomposerをインストール
-  ```
+  ```sh
   php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
   php composer-setup.php
   php -r "unlink('composer-setup.php');"
   ```
+
 - どのディレクトリにいてもcomposerコマンドを使用できるようfileの移動を行います
-  ```
+  ```sh
   sudo mv composer.phar /usr/local/bin/composer
   ```
+
 - composer のバージョンが確認できたらOK
-  ```
+  ```sh
   $ composer -v
      ______
     / ____/___  ____ ___  ____  ____  ________  _____
@@ -144,28 +199,29 @@
 ### laravel6.0のインストール
 - ホストOS上のvagrant用ディレクトリで下記のコマンドを実行  
   今回は`laraPro`という名前のプロジェクトにした
-  ```
+
+  ```sh
   cd vagrant_dir
   composer create-project --prefer-dist laravel/laravel laraPro "6.*"
   ```
 
 ### laravel6.0 認証機能の追加
 - 下記のコマンドをプロジェクトファイルの中で実行し認証機能を追加
-  ```
+  ```sh
   cd laraPro
   composer require laravel/ui "^1.0" --dev
   php artisan ui vue --auth
   ```
 
 - 下記のコマンドを実行しvagrantを再起動し作成したlaravelアプリケーションをゲストOS内の`/vagrant`ファイルと同期させ、再度ログイン
-  ```
+  ```sh
   vagrant reload
   vagrant ssh
   ```
 
 ### NginXのインストール
 - 下記のコマンドを実行しviエディタを使用して以下のファイルを作成、修正する
-  ```
+  ```sh
   sudo vi /etc/yum.repos.d/nginx.repo
   ```
 
@@ -179,22 +235,23 @@
   ```
 
 - 書き終えたら保存して、以下のコマンドを実行しNginxのインストールを実行する
-  ```
+  ```sh
   sudo yum install -y nginx
   nginx -v
   ```
   
 - 下記のコマンドでNginxの起動する
-  ```
+  ```sh
   sudo systemctl start nginx
   ```
+
   ブラウザにて http://192.168.33.19と入力し、NginxのWelcomeページが表示されたら問題なく動いているので次に進む
 
 - NginxのWelcomeページが表示されず、`Forbidden 403`というエラーが出た場合の対処法  
   viエディタを使用してSELinuxの設定を変更
   「SELinux コンテキスト」の不一致によりエラーが出ているので、SELinuxを無効化(今回はローカル環境なので無効にしても問題ないが、本番環境構築のときは別のアプローチが必要)
 
-  ```
+  ```sh
   sudo vi /etc/selinux/config
   ```
   viエディタが開き設定ファイルが表示されるので下記の部分を探す
@@ -211,25 +268,27 @@
   SELINUX=disabled
   ```
   設定を反映させるためにゲストOSを再起動する必要があるので、ゲストOSをから一度ログアウトして下記コマンドを実行
-  ```
+  ```sh
   exit
   vagrant reload
   ```
 
   リロードが完了したら再度ゲストOSにログイン
-  ```
+  ```sh
   vagrant ssh
   ```
 
   再度Nginxを起動
-  ```
+  ```sh
   sudo systemctl start nginx
   ```
   NginxのWelcomeページが表示されたら次に進む
 
+### Laravelを動かす
+
 - Nginxは、php-fpmとセットで使用するため、php-fpmにも設定ファイルが存在しているのでこちらも編集する  
 使用しているOSがCentOSの場合、`/etc/nginx/conf.d`ディレクトリ下の`default.conf`ファイルが設定ファイルとなる
-  ```
+  ```sh
   sudo vi /etc/nginx/conf.d/default.conf
   ```
 
@@ -267,9 +326,10 @@
   ```
 
 - 次に php-fpm の設定ファイルを編集する
-  ```
+  ```sh
   sudo vi /etc/php-fpm.d/www.conf
   ```
+
   変更箇所は以下になる
   ```
   ;24行目近辺
@@ -281,8 +341,9 @@
   ↓
   group = nginx
   ```
+
 - Nginxを再起動し、php-fpmを起動する
-  ```
+  ```sh
   sudo systemctl restart nginx
   sudo systemctl start php-fpm
   ```
@@ -296,7 +357,7 @@
   これは先程php-fpmの設定ファイルの`user`と`group`を`nginx`に変更したが、ファイルとディレクトリの実行`user`と`group`に`nginx`が許可されていないため起きているエラー
 
 - 試しに以下のコマンドを実行する
-  ```
+  ```sh
   cd /vagrant/laraPro
   ls -la ./ | grep storage && ls -la storage/ | grep logs && ls -la storage/logs/ | grep laravel.log
   ```
@@ -304,7 +365,7 @@
   出力結果から、`storage`ディレクトリも`logs`ディレクトリも`laravel.log`ファイルも全て`user`と`group`が`vagrant`となっているので、これでは`nginx`というユーザーの権限をもって`laravel.log`ファイルへの書き込みができない
 
   以下のコマンドを実行して`nginx`というユーザーでもログファイルへの書き込みができる権限を付与する
-  ```
+  ```sh
   sudo chmod -R 777 storage
   ```
 
@@ -313,7 +374,7 @@
 
 ### データベースのインストール
 - 下記のコマンドを実行しmysql5.7をインストールし、versionの確認ができたらインストール完了
-  ```
+  ```sh
   sudo wget https://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
   sudo rpm -Uvh mysql57-community-release-el7-7.noarch.rpm
   sudo yum install -y mysql-community-server
@@ -321,33 +382,33 @@
   ```
 
 - 次にMySQLを起動し接続
-  ```
+  ```sh
   sudo systemctl start mysqld
   mysql -u root -p
   Enter password:
   ```
   今回はデフォルトでrootにパスワードが設定されてしまっているので、
 まずはpasswordを調べ、接続しpassswordの再設定を行っていく
-  ```
+  ```sh
   sudo cat /var/log/mysqld.log | grep 'temporary password'
   2017-01-01T00:00:00.000000Z 1 [Note] A temporary password is generated for root@localhost: hogehoge
   ```
   `hogehoge`と記載されている箇所に存在するランダムな文字列がパスワード
 
 - 先程出力したランダム文字列をコピー後、再度以下のコマンドを実行し、パスワード入力時にペースト
-  ```
+  ```sh
   mysql -u root -p
   Enter password:
   ```
 
 - 次に接続した状態でpasswordを変更
-  ```
+  ```sql
   mysql > set password = "新たなpassword";
   ```
 
 - 新たなpasswordには、必ず大文字小文字の英数字 + 記号かつ8文字以上の設定をする必要がある  
 MySQL5.7のパスワードポリシーは厳格で開発段階では非常に面倒のため、以下の設定を行いシンプルなパスワードに初期設定できるようにMySQLの設定ファイルを変更
-  ```
+  ```sh
   sudo vi /etc/my.cnf
   ```
 
@@ -373,7 +434,7 @@ MySQL5.7のパスワードポリシーは厳格で開発段階では非常に面
 
 ### データベースの作成
 - Laravelのアプリケーションを動かす上で使用するデータベースの作成を行う
-  ```
+  ```sql
   mysql > create database laravel_app;
   ```
   Query OKと表示されたら作成は完了
